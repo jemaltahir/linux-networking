@@ -1,7 +1,7 @@
 # linux-networking
 Advanced linux networking commands
 
-Sure, here is a summary of the commands I've suggested as a cheat sheet:
+A summary of the commands I've suggested as a cheat sheet:
 
 1. **IP Address Configuration**
    
