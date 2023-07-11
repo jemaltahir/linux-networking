@@ -1,7 +1,7 @@
 
 1. **Update & Package Installation:**
 
-These commands are about updating the system, installing new software packages, and configuring package repositories.
+The following commands are about updating the system, installing new software packages, and configuring package repositories.
 
 ```bash
 sudo yum update
@@ -28,7 +28,7 @@ These commands relate to MySQL operations, such as starting the service, creatin
 ```bash
 sudo systemctl start mariadb
 sudo systemctl enable mariadb
-mysql -u zekir -p -e "create database traccar"
+mysql -u youuser -p -e "create database traccar"
 sudo mysqld_safe --skip-grant-tables &
 mysql -uroot
 sudo killall mysqld
@@ -43,7 +43,7 @@ These commands involve starting the web server, enabling it to run at startup, a
 ```bash
 sudo systemctl start httpd
 sudo systemctl enable httpd
-sudo chown -R $USER:$USER /var/www/html
+sudo chown -R $USER:$USER /var/www/html -> ## N.B this is user specific, if you are running with root no need this step.
 ```
 
 5. **Composer Installation & Usage:**
@@ -89,7 +89,7 @@ nmap -p 1-65535 <server_ip>
 
 9. **Application-Specific Operations:**
 
-These commands are about working with specific applications like traccar and phpmyadmin.
+These commands are about working with specific applications like traccar.
 
 ```bash
 wget http://207.244.225.51/assets/gpswox_web.sql
