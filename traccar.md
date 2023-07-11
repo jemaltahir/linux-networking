@@ -1,5 +1,4 @@
-The steps you provided are for setting up a server with different services like Apache (httpd), MariaDB, Redis, NodeJS, PHP, Composer and Traccar, which is a GPS tracking system, on a CentOS or RHEL system. 
-They also include setting up a PHP application with Laravel's Artisan and Composer. 
+### The steps to setting up a server with different services like Apache (httpd), MariaDB, Redis, NodeJS, PHP, Composer and Traccar, which is a GPS tracking system, on a CentOS or RHEL system. They also include setting up a PHP application with Laravel's Artisan and Composer. 
 
 1. Update the system packages and install required services:
 
@@ -37,10 +36,10 @@ systemctl enable redis
 5. Setup the required databases:
 
 ```bash
-mysql -uroot -e "create database traccar"
-mysql -uroot -e "create database gpswox_web"
-mysql -uroot -e "create database gpswox_traccar"
-mysql -uroot -e "create database gpswox_engine_hours"
+mysql -uroot -e -p "create database traccar"  -> you have to provide the root password
+mysql -uroot -e -p "create database gpswox_web"
+mysql -uroot -e -p "create database gpswox_traccar"
+mysql -uroot -e -p "create database gpswox_engine_hours"
 ```
 
 6. Install composer and move it to a system-wide location:
