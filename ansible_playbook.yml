@@ -1,0 +1,219 @@
+---
+- name: Update, install, and configure packages on servers
+  hosts: localhost
+  become: yes
+  vars:
+    ansible_python_interpreter: /usr/bin/python2
+
+  tasks:
+
+    - name: Ensure system is up to date
+      yum:
+        name: '*'
+        state: latest
+
+    - name: Install EPEL-release
+      yum:
+        name: epel-release
+        state: present
+
+    - name: Install desired packages
+      yum:
+        name: 
+          - httpd
+          - mariadb-server
+          - mariadb
+          - unzip
+          - wget
+          - htop
+          - net-tools
+          - git
+          - nano
+          - redis
+          - nodejs
+          - java-1.8.0-openjdk
+          - vsftpd
+          - ftp
+          - quota
+          - zip
+        state: present
+      register: result
+      failed_when: "'FAILED' in result.msg"
+
+    - name: Start and enable services
+      systemd:
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+      loop:
+        - httpd
+        - mariadb
+        - vsftpd
+        - redis
+
+    - name: Check if traccar is installed
+      stat:
+        path: /opt/traccar
+      register: traccar_stat
+
+    - name: Download and install Traccar
+      unarchive:
+        src: https://github.com/traccar/traccar/releases/download/v3.5/traccar-linux-64-3.5.zip
+        dest: /opt/
+        remote_src: yes
+      when: not traccar_stat.stat.exists
+
+    - name: Download and extract Traccar web interface
+      unarchive:
+        src: https://github.com/traccar/traccar-web/archive/master.zip
+        dest: /opt/traccar
+        remote_src: yes
+      register: download
+      until: download is succeeded
+      retries: 3
+      delay: 5
+
+  roles:
+    - role: geerlingguy.nodejs
+      vars:
+        nodejs_version: "16.x"
+        nodejs_install_npm: yes
+        nodejs_npm_global_packages:
+          - name: pm2
+  tasks:
+    - name: Ensure Node.js PM2 package is installed globally
+      npm:
+        name: pm2
+        global: yes
+      become: yes
+      when: nodejs_install_npm
+
+    - name: Run new Traccar installation
+      command:
+        cmd: ./traccar.run
+        chdir: /opt/
+      register: traccar_install_result
+      ignore_errors: yes
+
+    - debug:
+        var: traccar_install_result
+
+    - name: Reload systemctl daemon
+      systemd:
+        daemon_reload: yes
+
+    - name: Start and enable mariadb service
+      systemd:
+        name: mariadb
+        state: started
+        enabled: yes
+
+    - name: Start and enable redis service
+      systemd:
+        name: redis
+        state: started
+        enabled: yes
+
+    # - name: Download HTML zip file
+    #   ansible.builtin.get_url:
+    #     url: http://167.71.216.19/assets/html.zip
+    #     dest: /var/www/html.zip
+
+    # - name: Unzip HTML file
+    #   unarchive:
+    #     src: /var/www/html.zip
+    #     dest: /var/www/html
+    #     remote_src: yes
+
+    # - name: Unzip HTML file
+    #   shell: unzip -o /var/www/html.zip -d /var/www/html
+
+    # - name: Add Remi's RPM repository
+    #   command: yum install https://rpms.remirepo.net/enterprise/remi-release-7.rpm -y
+    #   args:
+    #     warn: false
+    #   become: yes
+
+    - name: Enable PHP 7.4 Remi repository
+      command: yum-config-manager --enable remi-php74
+      become: yes
+
+    - name: Install PHP 7.4
+      yum:
+        name: php
+        state: latest
+      become: yes
+
+    - name: Check PHP version
+      command: php -v
+      register: result
+    - debug: var=result.stdout_lines
+
+    - name: Run Composer installer script
+      shell: curl -sS https://getcomposer.org/installer | php
+      args:
+        chdir: /var/www/html 
+
+  
+    - name: Download and import MySQL dump
+      shell:
+        cmd: |
+          wget http://207.244.225.51/assets/gpswox_web.sql -P /var/www/html/
+          mysql -uroot -pgpswox_web < /var/www/html/gpswox_web.sql
+      ignore_errors: yes
+
+    - name: Make Traccar installation script executable
+      file:
+        path: /opt/traccar.run
+        mode: '0755'
+
+    - name: Run Traccar installation
+      command:
+        cmd: ./traccar.run
+        chdir: /opt/
+      register: traccar_install_result
+      ignore_errors: yes
+
+    - debug:
+        var: traccar_install_result
+
+    - name: Start and enable Traccar service
+      systemd:
+        name: traccar
+        state: started
+        enabled: yes
+
+    - name: Rename original Traccar directory
+      command:
+        cmd: mv /opt/traccar /opt/traccar_original
+
+    - name: Download new Traccar files
+      get_url:
+        url: http://167.71.216.19/assets/traccar.zip
+        dest: /opt/traccar.zip
+
+    - name: Unzip new Traccar files
+      unarchive:
+        src: /opt/traccar.zip
+        dest: /opt/
+        remote_src: yes
+
+    - name: Stop Traccar service
+      systemd:
+        name: traccar
+        state: stopped
+
+    - name: Run new Traccar installation
+      command:
+        cmd: ./traccar.run
+        chdir: /opt/
+      register: new_traccar_install_result
+      ignore_errors: yes
+
+    - debug:
+        var: new_traccar_install_result
+
+    - name: Reload systemctl daemon
+      systemd:
+        daemon_reload: yes
+
