@@ -189,6 +189,18 @@ A summary of the commands I've suggested as a cheat sheet:
    sudo arp -d 192.168.1.1
    ```
 
+Networking (neutron)¶
+
+Create network
+
+$ openstack network create NETWORK_NAME
+
+Create a subnet
+
+$ openstack subnet create --subnet-pool SUBNET --network NETWORK SUBNET_NAME
+$ openstack subnet create --subnet-pool 10.0.0.0/29 --network net1 subnet1
+
+
 
 
 Remember to replace `192.168.1.100`, `192.168.1.1`, `10.0.0.0/8`, `eth0`, and other example values with the actual values for your network configuration. Please note that some of these commands may require additional packages to be installed on your system. For instance, `brctl` is part of the `bridge-utils` package, and may not be installed by default on some systems. Additionally, these commands should be executed with caution, as misconfigurations can cause network issues.
